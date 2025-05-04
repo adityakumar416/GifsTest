@@ -5,14 +5,17 @@ import android.text.Editable
 import android.text.TextWatcher
 import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
-import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.Observer
+import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.test1.databinding.ActivityMainBinding
-import kotlinx.coroutines.launch
+import com.example.test1.models.GifsModel
 
 class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
+    lateinit var gifsViewModel: GifsViewModel
+    private lateinit var gifsAdapter: GifsAdapter
 
     private var url: String? = null
 
@@ -21,9 +24,15 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        binding.recyclerView.layoutManager = LinearLayoutManager(this)
+        gifsViewModel = ViewModelProvider(this)[GifsViewModel::class.java]
 
-        getAllGifs()
+         gifsAdapter = GifsAdapter()
+        binding.recyclerView.layoutManager = LinearLayoutManager(this)
+        binding.recyclerView.adapter = gifsAdapter
+
+
+        gifsViewModel.getGifs("DHyJbfhiXuL6zkBeDEP63J4BgmTEvNn7")
+        observeAllGifs()
 
         binding.searchgifs.addTextChangedListener(object : TextWatcher {
             override fun afterTextChanged(s: Editable?) {
@@ -31,9 +40,13 @@ class MainActivity : AppCompatActivity() {
                 val search = s.toString().trim()
 
                     if (search.isEmpty()){
-                        getAllGifs()
+
+                        observeAllGifs()
                     }else{
-                        searchGifs(search)
+
+                        gifsViewModel.searchGifs("DHyJbfhiXuL6zkBeDEP63J4BgmTEvNn7",search)
+
+                        observeSearchGifs()
 
                     }
             }
@@ -52,24 +65,18 @@ class MainActivity : AppCompatActivity() {
 
     }
 
-    private fun searchGifs(searchText: String) {
-        lifecycleScope.launch {
-            val api =
-                RetrofitInstance.apiCall.searchGifs("DHyJbfhiXuL6zkBeDEP63J4BgmTEvNn7", searchText)
-
-            binding.recyclerView.adapter = GifsAdapter(api.data)
-
-
-        }
+    private fun observeSearchGifs() {
+        gifsViewModel.getAllSearchGifs.observe(this@MainActivity, Observer<GifsModel> {
+            gifsAdapter.updateData(it.data)
+        })
     }
 
-    private fun getAllGifs() {
-        lifecycleScope.launch {
-            val api = RetrofitInstance.apiCall.getGifs("DHyJbfhiXuL6zkBeDEP63J4BgmTEvNn7")
+    private fun observeAllGifs() {
+        gifsViewModel.getAllGifs.observe(this@MainActivity, Observer<GifsModel> { gifsModel ->
+            gifsAdapter.updateData(gifsModel.data)
 
-            binding.recyclerView.adapter = GifsAdapter(api.data)
-
-
-        }
+        })
     }
+
+
 }

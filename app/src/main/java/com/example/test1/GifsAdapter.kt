@@ -7,7 +7,14 @@ import com.bumptech.glide.Glide
 import com.example.test1.databinding.GifsItemBinding
 import com.example.test1.models.Data
 
-class GifsAdapter(val gifsList: List<Data>) : RecyclerView.Adapter<GifsAdapter.ViewHolder>() {
+class GifsAdapter : RecyclerView.Adapter<GifsAdapter.ViewHolder>() {
+
+    var gifsList: List<Data> = mutableListOf()
+
+    fun updateData(gifsList: List<Data>){
+        this.gifsList = gifsList
+        notifyDataSetChanged()
+    }
 
     override fun onCreateViewHolder(
         parent: ViewGroup,
